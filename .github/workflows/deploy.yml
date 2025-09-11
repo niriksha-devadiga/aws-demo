@@ -2,40 +2,40 @@ name: Deploy to AWS ECS
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Step 1: Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      # Step 2: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: ${{ ap-south-1 }}
 
-    - name: Log in to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      # Step 3: Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:latest ./app
 
-    - name: Build Docker image
-      run: docker build -t myapp:latest ./app
+      # Step 4: Tag Docker image for ECR
+      - name: Tag Docker image
+        run: |
+          docker tag myapp:latest ${{ 756546933552 }}.dkr.ecr.${{ ap-south-1 }}.amazonaws.com/myapp:latest
 
-    - name: Tag Docker image
-      run: docker tag myapp:latest ${{ steps.login-ecr.outputs.registry }}/myapp:latest
+      # Step 5: Push Docker image to ECR
+      - name: Push Docker image
+        run: |
+          docker push ${{ 756546933552 }}.dkr.ecr.${{ ap-south-1 }}.amazonaws.com/myapp:latest
 
-    - name: Push Docker image to ECR
-      run: docker push 756546933552.dkr.ecr.ap-south-1.amazonaws.com/myapp:latest
-      
-    - name: Deploy to ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ecs-task.json
-        service: my-ecs-service
-        cluster: my-ecs-cluster
-        wait-for-service-stability: true
+      # Step 6: Deploy to ECS (optional, if you have ECS service ready)
+      - name: Update ECS service
+        run: |
+          aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment --region ${{ ap-south-1 }}
