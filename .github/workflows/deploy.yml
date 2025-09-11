@@ -29,9 +29,9 @@ jobs:
     - name: Tag Docker image
       run: docker tag myapp:latest ${{ steps.login-ecr.outputs.registry }}/myapp:latest
 
-    - name: Push to ECR
-      run: docker push ${{ steps.login-ecr.outputs.registry }}/myapp:latest
-
+    - name: Push Docker image to ECR
+      run: docker push 756546933552.dkr.ecr.ap-south-1.amazonaws.com/myapp:latest
+      
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
